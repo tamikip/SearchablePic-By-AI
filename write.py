@@ -29,7 +29,7 @@ def extract_content_after_colon(text):
 def gpt_pic(img_path):
     with open(img_path, 'rb') as img_file:
         img_base = base64.b64encode(img_file.read()).decode('utf-8')
-    key = "3a5661d2a3bafa406f4827e504eaee6d.6cEgSMwDVncZAhr8"
+    key = "your_key"
     headers = {
         'Accept': 'application/json',
         'Authorization': f'Bearer {key}',
