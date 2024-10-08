@@ -3,8 +3,7 @@ import os
 import json
 from PIL import Image
 
-# 使用更好的句子相似度模型
-model = SentenceTransformer(r"C:\Users\TamikiP\PycharmProjects\AI_PIC\aaa")
+model = SentenceTransformer("model")
 
 
 def get_png_files(folder_path):
@@ -59,48 +58,24 @@ def find_images_by_query(folder_path, query, if_camera):
         metadata = read_metadata_from_image(image_path)
         if metadata:
             description = metadata.get("description", "")
-            if if_camera == metadata.get("type", ""):
+            if if_camera == metadata.get("type", "") or if_camera == "all":
                 similarity_score = calculate_similarity(query, description)
                 if similarity_score >= 0.35:
                     image_similarities.append((image_path, similarity_score))
 
-    # 如果没有符合条件的图片，直接返回
     if not image_similarities:
         return []
 
-    # 按相似度从高到低排序
     image_similarities.sort(key=lambda x: x[1], reverse=True)
 
-    # 找到相似度最高的图片
     best_similarity = image_similarities[0][1]
 
     if best_similarity <= 0.3:
         return []
 
-    # 找到相似度差异小于0.04的图片
     matching_images = []
     for image_path, similarity in image_similarities:
         if best_similarity - similarity < 0.04:
             matching_images.append(os.path.basename(image_path))
 
     return matching_images
-
-
-def main():
-    folder_path = "new"
-    query = input("请输入查询条件: ")
-    if_camera = input("图片是否是由相机拍摄？ ")
-    if_camera = "camera" if if_camera == "是" else "others"
-
-    matching_images = find_images_by_query(folder_path, query,if_camera)
-
-    if matching_images:
-        print("找到符合条件的图片:")
-        for image in matching_images:
-            print(image)
-    else:
-        print("没有找到符合条件的图片。")
-
-
-if __name__ == "__main__":
-    main()
