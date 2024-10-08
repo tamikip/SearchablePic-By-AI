@@ -2,15 +2,13 @@ import os
 from PIL import Image
 import json
 
-folder_path = "new"
+folder_path = "processed_image"
 
-# 遍历文件夹中的所有文件
 for filename in os.listdir(folder_path):
     if filename.endswith(".png"):
         image_path = os.path.join(folder_path, filename)
         try:
             img = Image.open(image_path)
-
             metadata = img.text
             json_str = metadata.get("json_metadata", None)
 

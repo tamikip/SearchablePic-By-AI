@@ -6,6 +6,10 @@ import requests
 import base64
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from jpg_to_png import batch_convert_jpg_to_png
+import configparser
+
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 
 def get_png_files(folder_path):
@@ -27,18 +31,22 @@ def extract_content_after_colon(text):
 
 
 def gpt_pic(img_path):
+
+    key = config['config']['key']
+    base_url = config['config']['base_url']
+    model = config['config']['model']
+
     with open(img_path, 'rb') as img_file:
         img_base = base64.b64encode(img_file.read()).decode('utf-8')
-    key = "your_key"
+
     headers = {
         'Accept': 'application/json',
         'Authorization': f'Bearer {key}',
         'Content-Type': 'application/json'
     }
-    base_url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
 
     payload = json.dumps({
-        "model": "GLM-4V-Plus",
+        "model": model,
         "messages": [
             {
                 "role": "system",
@@ -75,23 +83,21 @@ def Text_embedded_in_image(image_path, content):
     img = Image.open(image_path)
     modification_time_stamp = os.path.getmtime(image_path)
     modification_date = datetime.fromtimestamp(modification_time_stamp).date()
-
     modification_date_str = modification_date.isoformat()
 
     json_data = {
         "description": content.strip(),
         "type": image_type,
-        "date": modification_date_str,
-        "person": "a"
+        "date": modification_date_str
     }
 
     json_str = json.dumps(json_data)
     meta = PngImagePlugin.PngInfo()
     meta.add_text("json_metadata", json_str)
     image_path = os.path.basename(image_path)
-    if not os.path.exists("new"):
-        os.makedirs("new")
-    img.save(f"new/{image_path}", "png", pnginfo=meta)
+    if not os.path.exists("processed_image"):
+        os.makedirs("processed_image")
+    img.save(f"processed_image/{image_path}", "png", pnginfo=meta)
     print(f"JSON 数据已嵌入到 {image_path} 的 PNG 元数据中。")
 
 
@@ -104,9 +110,9 @@ def process_image(image_path):
         print(f"处理图片 {image_path} 时出错: {e}")
 
 
-def main():
-    png_list = get_png_files("before")
-    batch_convert_jpg_to_png("before")
+def write():
+    png_list = get_png_files("pre_processed_image")
+    batch_convert_jpg_to_png("pre_processed_image")
 
     with ThreadPoolExecutor(max_workers=10) as executor:
         futures = [executor.submit(process_image, img_path) for img_path in png_list]
@@ -116,7 +122,4 @@ def main():
                 future.result()
             except Exception as e:
                 print(f"任务执行时出错: {e}")
-
-
-if __name__ == "__main__":
-    main()
+        return "打标完成！图片已放到processed_image文件夹！"
